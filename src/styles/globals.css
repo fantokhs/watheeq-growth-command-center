@@ -1,0 +1,181 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+ * متغيرات CSS للهوية - متاحة في كل المشروع
+ * ============================================================ */
+:root {
+  --watheeq-navy: #263f82;
+  --watheeq-navy-deep: #071a2c;
+  --watheeq-navy-card: #0b2238;
+  --watheeq-gold: #c8a45d;
+  --watheeq-gold-soft: #e6d3a3;
+  --watheeq-bg-warm: #f5f2ea;
+  --watheeq-bg-paper: #ffffff;
+
+  --ink: #0f1419;
+  --ink-muted: #5a6373;
+  --line: #e2dcce;
+}
+
+/* ============================================================
+ * Base Layer — RTL + خلفية الجسم العامة
+ * ============================================================ */
+@layer base {
+  html {
+    direction: rtl;
+    /* أساس 15.5px لقراءة أوضح */
+    font-size: 15.5px;
+    font-family: 'HSN Shahd', 'IBM Plex Sans Arabic', 'Tajawal', 'Cairo',
+      'Noto Kufi Arabic', system-ui, sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-watheeq-bg-warm text-ink;
+    font-size: 0.9375rem; /* ≈ 14.5px effective */
+    line-height: 1.55;
+    background-image:
+      /* Subtle hexagonal pattern - مستوحى من خلفية البروفايل */
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='52' viewBox='0 0 60 52'><g fill='none' stroke='%23263F82' stroke-width='0.4' opacity='0.030'><path d='M30 1l25 14.5v29L30 59 5 44.5v-29z'/><path d='M30 11l16 9.3v18.6L30 48.2l-16-9.3V20.3z'/></g></svg>");
+    background-size: 60px 52px;
+    background-attachment: fixed;
+  }
+
+  /* أرقام موحدة العرض في كل المؤشرات والجداول */
+  .tabular-nums,
+  .num,
+  .kpi-value,
+  table {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'cv11' 1, 'ss01' 1;
+  }
+
+  /* Scrollbar refined */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(7, 26, 44, 0.18);
+    border-radius: 8px;
+    border: 2px solid var(--watheeq-bg-warm);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(7, 26, 44, 0.32);
+  }
+
+  /* Selection */
+  ::selection {
+    background: var(--watheeq-gold);
+    color: var(--watheeq-navy-deep);
+  }
+
+  /* Focus rings - ذهبية تتناسب مع الهوية */
+  :focus-visible {
+    outline: 2px solid var(--watheeq-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Print: صفحات الطباعة */
+  @media print {
+    body {
+      background: white !important;
+      background-image: none !important;
+    }
+  }
+}
+
+/* ============================================================
+ * Component Utilities
+ * ============================================================ */
+@layer components {
+  /* بطاقة سطح فاتح */
+  .surface-card {
+    @apply bg-watheeq-bg-paper rounded-xl shadow-card;
+  }
+
+  /* بطاقة سطح داكن */
+  .surface-dark {
+    @apply bg-watheeq-navy-card text-white rounded-xl;
+  }
+
+  /* خط فاصل أنيق */
+  .hairline {
+    @apply border-t border-line/70;
+  }
+  .hairline-dark {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* تأثير الـ shimmer للـ loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(38, 63, 130, 0.04) 0%,
+      rgba(38, 63, 130, 0.10) 50%,
+      rgba(38, 63, 130, 0.04) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* خط ذهبي تحت العنصر النشط */
+  .gold-underline {
+    position: relative;
+  }
+  .gold-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    inset-inline-start: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--watheeq-gold);
+    border-radius: 2px;
+  }
+
+  /* نمط Hex خفيف للأسطح الداكنة (Sidebar) */
+  .navy-pattern {
+    background-color: var(--watheeq-navy-deep);
+    background-image:
+      linear-gradient(180deg, rgba(11, 34, 56, 0.4) 0%, rgba(7, 26, 44, 0) 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='52' viewBox='0 0 60 52'><g fill='none' stroke='%23C8A45D' stroke-width='0.4' opacity='0.07'><path d='M30 1l25 14.5v29L30 59 5 44.5v-29z'/><path d='M30 11l16 9.3v18.6L30 48.2l-16-9.3V20.3z'/></g></svg>");
+    background-size: auto, 60px 52px;
+  }
+
+  /* ✨ utility للأرقام والاختصارات الإنجليزية */
+  .num {
+    font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'cv11' 1, 'ss01' 1;
+  }
+
+  /* الكلمة الاختصارية الصغيرة بجانب الرقم (M, B, K, ر.س, YTD) */
+  .num-suffix {
+    font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
+    font-weight: 500;
+    opacity: 0.65;
+    margin-inline-start: 0.25em;
+    letter-spacing: 0;
+  }
+
+  /* تأثير hover ناعم لبطاقات تفاعلية */
+  .interactive-card {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .interactive-card:hover {
+    transform: translateY(-1px);
+    @apply shadow-card-hover;
+  }
+}
