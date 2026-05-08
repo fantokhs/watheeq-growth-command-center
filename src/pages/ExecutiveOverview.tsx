@@ -697,7 +697,9 @@ function RevenueTrendChart({
     if (data.length < 2) return null;
     const last = data[data.length - 1].revenue;
     const prev = data[data.length - 2].revenue;
-    return ((last - prev) / prev) * 100;
+    if (!prev || !isFinite(prev)) return null;
+    const growth = ((last - prev) / prev) * 100;
+    return isFinite(growth) ? growth : null;
   }, [data]);
 
   return (

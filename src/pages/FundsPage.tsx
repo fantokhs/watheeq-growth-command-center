@@ -86,7 +86,7 @@ export function FundsPage({ autoOpenFundId, onAutoOpenConsumed }: {
   if (fundsQ.isLoading) return <LoadingState message="جاري تحميل بيانات الصناديق…" minHeight="60vh" />;
   if (fundsQ.isError)   return <ErrorState title="تعذر تحميل الصناديق" onRetry={() => fundsQ.refetch()} />;
 
-  const activeFunds      = funds.filter((f) => f.status === 'Active').length;
+  const activeFunds      = funds.filter((f) => f.stage === 'Fundraising' || f.stage === 'Managed').length;
   const totalCommitted   = funds.reduce((s, f) => s + (f.committed_amount ?? 0), 0);
   const totalTarget      = funds.reduce((s, f) => s + (f.target_size ?? 0), 0);
   const fundraisingFunds = funds.filter((f) => f.stage === 'Fundraising').length;

@@ -164,7 +164,15 @@ export function VisitsPage() {
 
   // KPI calculations
   const kpis = useMemo(() => {
-    const thisWeek = visits.filter((v) => v.week_number === 19);
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const thisWeek = visits.filter((v) => {
+      const t = new Date(v.visit_date).getTime();
+      return isFinite(t) && t >= weekStart.getTime() && t < weekEnd.getTime();
+    });
     return {
       total:          thisWeek.length,
       completed:      thisWeek.filter((v) => v.status === 'completed').length,
