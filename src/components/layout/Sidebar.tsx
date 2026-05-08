@@ -155,7 +155,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
 
       {/* Brand block */}
       <div className="px-5 pt-7 pb-6 border-b border-white/[0.06]">
-        <WatheeqLogo variant="white" className="h-[34px]" />
+        <WatheeqLogo variant="white" className="h-[44px]" />
         <div className="mt-3.5 flex items-center gap-2">
           <span className="w-1 h-1 rounded-full bg-watheeq-gold" aria-hidden="true" />
           <p className="text-[12px] text-watheeq-gold-soft tracking-wide font-medium leading-none">
