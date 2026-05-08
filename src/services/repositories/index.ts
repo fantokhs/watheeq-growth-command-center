@@ -236,7 +236,11 @@ export async function getPipeline(): Promise<FetchResult<PipelineItem>> {
         ?? raw.next_step_date
       ),
       expected_close_date: parseDate(raw.close_date ?? raw.expected_close_date),
-      ceo_attention_flag: parseBool(raw.requires_management_attention ?? raw.ceo_attention_flag),
+      ceo_attention_flag: parseBool(
+        raw.management_attention_flag   // 03_Pipeline exact column (نعم/لا)
+        ?? raw.requires_management_attention
+        ?? raw.ceo_attention_flag
+      ),
       created_at: parseDate(raw.created_at),
       notes:      parseString(raw.notes),
       interestStatus: normalizeInterestStatus(
