@@ -59,13 +59,13 @@ export function formatCurrencyShortParts(value: number | null | undefined): Form
 
   if (abs >= 1e9) {
     n = value / 1e9;
-    unit = 'B';
+    unit = 'مليار';
   } else if (abs >= 1e6) {
     n = value / 1e6;
-    unit = 'M';
+    unit = 'مليون';
   } else if (abs >= 1e3) {
     n = value / 1e3;
-    unit = 'K';
+    unit = 'ألف';
   } else {
     return {
       num: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value),
