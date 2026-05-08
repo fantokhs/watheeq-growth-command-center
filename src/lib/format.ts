@@ -38,7 +38,7 @@ export function formatCurrencyParts(value: number | null | undefined): Formatted
   return { num: formatted, suffix: CURRENCY_SUFFIX };
 }
 
-/** "5.2B ر.س" — للنصوص فقط */
+/** "5.2ر.س مليار" — للنصوص فقط */
 export function formatCurrencyShort(value: number | null | undefined): string {
   const p = formatCurrencyShortParts(value);
   return p.suffix ? `${p.num}${p.suffix}` : p.num;
@@ -47,9 +47,9 @@ export function formatCurrencyShort(value: number | null | undefined): string {
 /**
  * النسخة المهمة لـ KPIs:
  *   formatCurrencyShortParts(5_200_000_000) →
- *     { num: "5.2", suffix: "B ر.س" }
+ *     { num: "5.2", suffix: "ر.س مليار" }
  *
- * يسمح للـ KPICard أن يعرض "5.2" ضخماً ثم "B ر.س" أصغر وأخف.
+ * يسمح للـ KPICard أن يعرض "5.2" ضخماً ثم "ر.س مليار" أصغر وأخف.
  */
 export function formatCurrencyShortParts(value: number | null | undefined): FormattedParts {
   if (value === null || value === undefined || isNaN(value)) return { num: '—' };
