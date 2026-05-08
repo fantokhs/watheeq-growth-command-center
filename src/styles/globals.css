@@ -161,9 +161,10 @@
     font-feature-settings: 'tnum' 1, 'cv11' 1, 'ss01' 1;
   }
 
-  /* الكلمة الاختصارية الصغيرة بجانب الرقم (M, B, K, ر.س, YTD) */
+  /* الكلمة الاختصارية الصغيرة بجانب الرقم (ر.س, مليار, مليون, ألف) — تستخدم خط الواجهة العربي */
   .num-suffix {
-    font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
+    font-family: 'HSN Shahd', 'IBM Plex Sans Arabic', 'Tajawal', 'Cairo',
+      'Noto Kufi Arabic', system-ui, sans-serif;
     font-weight: 500;
     opacity: 0.65;
     margin-inline-start: 0.25em;
