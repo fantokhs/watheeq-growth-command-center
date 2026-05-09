@@ -98,11 +98,17 @@ export function FundsPage({ autoOpenFundId, onAutoOpenConsumed }: {
         <div className="flex gap-2">
           <InputFormLauncher url={INPUT_FORMS.FUND_FORM_URL} label="إضافة صندوق" icon="+" variant="primary" />
         </div>
-        <button type="button"
-          onClick={() => openReport({ reportType: 'fund_fundraising', fundId: funds.find((f) => f.stage === 'Fundraising')?.fund_id })}
-          className="text-[12px] font-bold px-4 py-2 rounded-lg bg-watheeq-navy text-white hover:bg-watheeq-navy-deep transition-colors">
-          📊 تقرير تعبئة الصندوق
-        </button>
+        {(() => {
+          const fundraisingFundId = funds.find((f) => f.stage === 'Fundraising')?.fund_id;
+          return (
+            <button type="button"
+              disabled={!fundraisingFundId}
+              onClick={() => fundraisingFundId && openReport({ reportType: 'fund_fundraising', fundId: fundraisingFundId })}
+              className="text-[12px] font-bold px-4 py-2 rounded-lg bg-watheeq-navy text-white hover:bg-watheeq-navy-deep transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-watheeq-navy">
+              📊 تقرير تعبئة الصندوق
+            </button>
+          );
+        })()}
       </div>
       <ReportGate state={rptState} onClose={closeReport} />
       {/* Stats */}
@@ -111,7 +117,7 @@ export function FundsPage({ autoOpenFundId, onAutoOpenConsumed }: {
           { label: 'إجمالي الصناديق',         value: String(funds.length) },
           { label: 'صناديق نشطة',             value: String(activeFunds) },
           { label: 'تحت الاستقطاب',           value: String(fundraisingFunds) },
-          { label: 'نسبة التغطية الإجمالية',  value: formatPercent(totalCommitted / Math.max(totalTarget, 1)) },
+          { label: 'نسبة التغطية الإجمالية',  value: totalTarget > 0 ? formatPercent(totalCommitted / totalTarget) : '—' },
         ].map((s) => (
           <div key={s.label} className="surface-card px-4 py-4">
             <p className="text-[12px] text-ink-muted mb-1">{s.label}</p>
