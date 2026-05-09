@@ -21,7 +21,8 @@ export const clientStatusLabels: Record<ClientStatus, string> = {
   existing: 'عميل قائم',
   prospect: 'عميل محتمل',
   sensitive: 'عميل حساس',
-  churned: 'منقطع',
+  churned: 'عميل مجمد',
+  archived: 'عميل مؤرشف',
 };
 
 export const clientClassificationLabels: Record<ClientClassification, string> = {

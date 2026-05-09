@@ -82,7 +82,8 @@ export function calcMatchScore(client: Client, fund: Fund): MatchScore {
 
   // Flags إضافية
   if (client.status === 'sensitive') flags.push('عميل حساس — يتطلب تعامل خاص');
-  if (client.status === 'churned') flags.push('عميل منقطع');
+  if (client.status === 'churned') flags.push('عميل مجمد');
+  if (client.status === 'archived') flags.push('عميل مؤرشف');
   if (client.is_ceo_attention) flags.push('تحت رادار الإدارة');
 
   // العلاوة على العميل الحالي
@@ -115,7 +116,7 @@ export function getRecommendedInvestors(
   limit = 8
 ): Array<{ client: Client; match: MatchScore }> {
   return clients
-    .filter((c) => c.status !== 'churned')
+    .filter((c) => c.status !== 'churned' && c.status !== 'archived')
     .map((client) => ({ client, match: calcMatchScore(client, fund) }))
     .filter(({ match }) => match.score >= 35)
     .sort((a, b) => b.match.score - a.match.score)

@@ -14,7 +14,7 @@
 export type ID = string;
 export type ISODate = string; // 'YYYY-MM-DD'
 
-export type ClientStatus = 'existing' | 'prospect' | 'sensitive' | 'churned';
+export type ClientStatus = 'existing' | 'prospect' | 'sensitive' | 'churned' | 'archived';
 export type ClientClassification = 'HNW' | 'UHNW' | 'Family Office' | 'Institution' | 'Retail';
 export type RiskProfile = 'Conservative' | 'Balanced' | 'Growth' | 'Aggressive';
 export type AssetClass =

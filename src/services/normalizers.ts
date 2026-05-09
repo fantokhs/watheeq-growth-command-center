@@ -35,13 +35,16 @@ export function normalizeClientClassification(raw?: unknown): ClientClassificati
 }
 
 // ─── 2. ClientStatus ──────────────────────────────────────────────
-// Sheet values: نشط / محتمل / منقطع (only نشط seen so far)
+// Sheet values: نشط / قيد المتابعة / مجمد / مؤرشف
+// Internally: churned represents مجمد (frozen). منقطع kept for legacy data.
 export function normalizeClientStatus(raw?: unknown): ClientStatus {
   const s = v(raw);
-  if (/نشط|existing|active|^active$/i.test(s))   return 'existing';
-  if (/sensitive|حساس/i.test(s))                  return 'sensitive';
-  if (/churned|منقطع|inactive/i.test(s))          return 'churned';
-  return 'prospect'; // محتمل / prospect / empty
+  if (/نشط|existing|active|^active$/i.test(s))                  return 'existing';
+  if (/sensitive|حساس/i.test(s))                                 return 'sensitive';
+  if (/مؤرشف|archived|archive/i.test(s))                         return 'archived';
+  if (/مجمد|frozen|churned|منقطع|inactive/i.test(s))             return 'churned';
+  if (/قيد.?المتابعة|محتمل|prospect|lead/i.test(s))              return 'prospect';
+  return 'prospect'; // empty / unknown
 }
 
 // ─── 3. RiskProfile ───────────────────────────────────────────────
