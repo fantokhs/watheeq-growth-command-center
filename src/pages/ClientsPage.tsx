@@ -240,9 +240,7 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
       <FilterBar onClear={clearFilters} activeCount={activeFilters}>
         <FilterSearch value={search} onChange={setSearch} placeholder="ابحث باسم العميل…" />
         <FilterSelect label="الحالة" value={fStatus} onChange={setFStatus}
-          options={buildFilterOptions(clients, c => c.status, {
-            existing:'عميل قائم', prospect:'عميل محتمل', sensitive:'حساس', churned:'منقطع'
-          })} />
+          options={buildFilterOptions(clients, c => c.status, clientStatusLabels as Record<string,string>)} />
         <FilterSelect label="التصنيف" value={fClass} onChange={setFClass}
           options={buildFilterOptions(clients, c => c.classification, clientClassificationLabels as Record<string,string>)} />
         <FilterSelect label="المدينة" value={fCity} onChange={setFCity}
