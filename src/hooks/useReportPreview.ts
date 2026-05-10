@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ReportType } from '@/types/reports';
+import type { Client, Fund, Holding } from '@/types';
 
 export interface ReportPreviewState {
   reportType: ReportType;
@@ -10,6 +11,13 @@ export interface ReportPreviewState {
   notes?: string;
   /** true = فُتح من سياق محدد (drawer عميل/صندوق) فلا يحتاج نموذج إعداد */
   fromContext?: boolean;
+  /**
+   * بيانات حية مُمرّرة من الصفحة (Google Sheets عبر useFunds/useClients/useHoldings).
+   * تُستخدم في تقارير تعتمد على المصدر الحي بدلاً من mockData، مثل fund_update.
+   */
+  liveFund?: Fund;
+  liveClient?: Client;
+  liveHolding?: Holding | null;
 }
 
 export function useReportPreview() {

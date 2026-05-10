@@ -154,6 +154,39 @@ export async function getFunds(): Promise<FetchResult<Fund>> {
         raw.close_date             // 02_Funds exact column
         ?? raw.fund_close_date
       ),
+
+      // ── 02_Funds report payload (all optional; column names match the live sheet)
+      report_ready:               parseString(raw.report_ready),
+      report_status:              parseString(raw.report_status),
+      report_title:               parseString(raw.report_title),
+      report_period:              parseString(raw.report_period),
+      project_name:               parseString(raw.project_name),
+      project_location:           parseString(raw.project_location),
+      near_haram:                 parseString(raw.near_haram),
+      asset_type:                 parseString(raw.asset_type_report ?? raw.asset_type),
+      units_count:                parseNumber(raw.units_count),
+      land_area:                  parseNumber(raw.land_area_m2     ?? raw.land_area),
+      built_up_area:              parseNumber(raw.built_up_area_m2 ?? raw.built_up_area),
+      sellable_area:              parseNumber(raw.sellable_area_m2 ?? raw.sellable_area),
+      far:                        parseNumber(raw.far),
+      project_value:              parseMoneyNumber(raw.project_value_sar ?? raw.project_value) || undefined,
+      duration:                   parseString(raw.project_duration ?? raw.duration),
+      sales_model:                parseString(raw.sales_model),
+      pre_construction_progress:  parsePercent(raw.pre_construction_progress_pct ?? raw.pre_construction_progress),
+      overall_progress:           parsePercent(raw.overall_progress_pct ?? raw.overall_progress),
+      executive_summary:          parseString(raw.executive_summary),
+      achievements:               parseString(raw.achievements),
+      jan_summary:                parseString(raw.jan_summary),
+      feb_summary:                parseString(raw.feb_summary),
+      mar_summary:                parseString(raw.mar_summary),
+      approvals_completed:        parseString(raw.approvals_completed),
+      approvals_pending:          parseString(raw.approvals_pending),
+      investor_meaning:           parseString(raw.investor_meaning),
+      next_steps:                 parseString(raw.next_steps),
+      disclaimer:                 parseString(raw.disclaimer),
+      linked_client_ids:          parseString(raw.linked_client_ids)
+                                    ?.split(/[,،;؛]/).map((s) => s.trim()).filter(Boolean),
+      last_updated:               parseDate(raw.report_last_updated ?? raw.last_updated),
     };
   });
 }

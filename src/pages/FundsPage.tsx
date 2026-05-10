@@ -280,6 +280,23 @@ function FundDrawer({ fund, clients, pipeline, empName, onClose, onOpenReport }:
 
       {/* Report buttons */}
       <div className="flex flex-wrap gap-2">
+        {(() => {
+          const reportReady = (fund.report_ready ?? '').trim().toUpperCase() === 'YES';
+          return (
+            <button type="button"
+              disabled={!reportReady}
+              title={reportReady ? undefined : 'لم يجهز التقرير بعد'}
+              onClick={() => reportReady && onOpenReport({ reportType: 'fund_update', fundId: fund.fund_id, liveFund: fund })}
+              className={cn(
+                'text-[12px] font-bold px-3 py-2 rounded-lg transition-all flex items-center gap-1.5',
+                reportReady
+                  ? 'bg-watheeq-navy text-white hover:bg-watheeq-navy-deep'
+                  : 'bg-watheeq-bg-cream/40 text-ink-faint border border-line/40 cursor-not-allowed'
+              )}>
+              📄 {reportReady ? 'تحديث الصندوق' : 'لم يجهز التقرير بعد'}
+            </button>
+          );
+        })()}
         <button type="button" onClick={() => onOpenReport({ reportType: 'fund_teaser', fundId: fund.fund_id })}
           className="text-[12px] font-bold px-3 py-2 rounded-lg border border-watheeq-navy/20 bg-watheeq-bg-cream/60 text-watheeq-navy hover:bg-watheeq-navy hover:text-white transition-all flex items-center gap-1.5">
           📄 تيزر الصندوق

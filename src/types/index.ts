@@ -101,6 +101,41 @@ export interface Fund {
   notes?: string;
   /** Phase 3.6: تاريخ الإغلاق المستهدف */
   fund_close_date?: ISODate;
+
+  // ─── 02_Funds — Report payload fields ────────────────────────────
+  // All optional. Drive the FundUpdateReport when present, fall back
+  // to the generic fields above otherwise.
+  report_ready?: string;
+  report_status?: string;
+  report_title?: string;
+  report_period?: string;
+  project_name?: string;
+  project_location?: string;
+  /** نص حر يصف القرب من الحرم (مثلاً: "حوالي 2.5 كم من المسجد الحرام") */
+  near_haram?: string;
+  asset_type?: string;
+  units_count?: number;
+  land_area?: number;
+  built_up_area?: number;
+  sellable_area?: number;
+  far?: number;
+  project_value?: number;
+  duration?: string;
+  sales_model?: string;
+  pre_construction_progress?: number; // 0..1
+  overall_progress?: number;          // 0..1
+  executive_summary?: string;
+  achievements?: string;
+  jan_summary?: string;
+  feb_summary?: string;
+  mar_summary?: string;
+  approvals_completed?: string;
+  approvals_pending?: string;
+  investor_meaning?: string;
+  next_steps?: string;
+  disclaimer?: string;
+  linked_client_ids?: string[];
+  last_updated?: ISODate;
 }
 
 // ============================================================

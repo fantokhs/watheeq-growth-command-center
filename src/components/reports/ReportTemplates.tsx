@@ -744,6 +744,329 @@ export function RMPerformanceReport({ ownerId = 'EMP-002', notes }: { ownerId?: 
 }
 
 // ─────────────────────────────────────────────
+// K. تقرير تحديث الصندوق (يقرأ بيانات حية مُمرّرة من الصفحة)
+// ─────────────────────────────────────────────
+import type { Client, Fund, Holding } from '@/types';
+
+export function FundUpdateReport({
+  fund,
+  client,
+  holding,
+  notes,
+}: {
+  fund: Fund;
+  client?: Client;
+  holding?: Holding | null;
+  notes?: string;
+}) {
+  const progress = clampPct(fund.fundraising_progress_pct ?? 0);
+  const isPersonal = !!client;
+  const hasHolding = !!holding;
+  const investedAmount = holding?.invested_amount ?? 0;
+  const currentValue   = holding?.current_value   ?? 0;
+  const realizedProfit = holding?.realized_profit ?? 0;
+  const clientReturnPct = investedAmount > 0 ? realizedProfit / investedAmount : 0;
+
+  // Title / subtitle / period prefer report fields, fallback to generic
+  const reportTitle    = fund.report_title    || `تحديث ${fund.name_ar}`;
+  const reportPeriod   = fund.report_period;
+  const titleSubtitle  = isPersonal
+    ? `${reportTitle} — معدّ خصيصاً لـ ${client!.name_ar}`
+    : `${reportTitle} — للمستثمرين والإدارة`;
+
+  return (
+    <ReportShell>
+      <ReportCover
+        title={reportTitle}
+        subtitle={titleSubtitle}
+        reportType="fund_update"
+        audience={isPersonal ? 'client' : 'management'}
+        clientName={client?.name_ar}
+        fundName={fund.name_ar}
+        generatedAt={fund.last_updated ?? new Date().toISOString()}
+      />
+
+      {/* Period + status banner */}
+      {(reportPeriod || fund.report_status) && (
+        <ReportSection>
+          <div className="flex flex-wrap gap-2 text-[12px]">
+            {reportPeriod && (
+              <span className="px-3 py-1 rounded-full border border-watheeq-gold/30 bg-watheeq-gold/8 text-watheeq-gold-deep font-bold num">
+                {reportPeriod}
+              </span>
+            )}
+            {fund.report_status && (
+              <span className="px-3 py-1 rounded-full border border-line text-ink-muted font-medium">
+                {fund.report_status}
+              </span>
+            )}
+            {fund.last_updated && (
+              <span className="px-3 py-1 rounded-full border border-line/60 text-ink-faint">
+                آخر تحديث: <span className="num">{formatDate(fund.last_updated)}</span>
+              </span>
+            )}
+          </div>
+        </ReportSection>
+      )}
+
+      {/* Personal context: missing-data fallback notice */}
+      {isPersonal && !hasHolding && (
+        <ReportSection>
+          <ReportInsight
+            icon="ℹ"
+            tone="warning"
+            label="ملاحظة بشأن البيانات"
+            text="بيانات الاستثمار الخاصة بهذا العميل غير مكتملة حاليًا في المصدر، ويعرض هذا التقرير التحديث العام للصندوق."
+          />
+        </ReportSection>
+      )}
+
+      {/* Executive summary — prefer field, fallback to generated */}
+      <ReportSection>
+        <ReportExecutiveSummary text={
+          fund.executive_summary
+          ?? (isPersonal && hasHolding
+              ? `يستعرض هذا التقرير أداء ${fund.name_ar} وحصة ${client!.name_ar} فيه. ` +
+                `حصة العميل المستثمرة ${formatCurrencyShort(investedAmount)} بقيمة سوقية حالية ${formatCurrencyShort(currentValue)}. ` +
+                `الصندوق في مرحلة ${fundStageLabels[fund.stage]} بنسبة استقطاب ${formatPercent(progress)} من المستهدف.`
+              : `يستعرض هذا التقرير الوضع العام لـ ${fund.name_ar}. ` +
+                `الصندوق في مرحلة ${fundStageLabels[fund.stage]} بنسبة استقطاب ${formatPercent(progress)} من حجم مستهدف ${formatCurrencyShort(fund.target_size)}. ` +
+                `العائد المتوقع ${formatPercent(fund.expected_return_pct)} على مدى ${fund.duration_years ?? '—'} سنوات.`)
+        } />
+      </ReportSection>
+
+      {/* Per-client metrics (only when holding exists) */}
+      {isPersonal && hasHolding && (
+        <ReportSection title="حصة العميل في الصندوق" gold>
+          <ReportHeroNumbers items={[
+            { label: 'حصة العميل المستثمرة', value: formatCurrencyShort(investedAmount), color: 'default' },
+            { label: 'القيمة الحالية',       value: formatCurrencyShort(currentValue),   color: 'success' },
+            { label: 'الأرباح المحققة',      value: formatCurrencyShort(realizedProfit), color: 'success' },
+            { label: 'العائد على الحصة',     value: formatPercent(clientReturnPct),       color: 'gold' },
+          ]} />
+        </ReportSection>
+      )}
+
+      {/* Project profile — only if any project field is present */}
+      {(fund.project_name || fund.project_location || fund.asset_type || fund.near_haram) && (
+        <ReportSection title="نبذة عن المشروع">
+          {fund.project_name      && <ReportMetricCard label="اسم المشروع"   value={fund.project_name} />}
+          {fund.project_location  && <ReportMetricCard label="الموقع"        value={fund.project_location} />}
+          {fund.near_haram        && <ReportMetricCard label="القرب من الحرم" value={fund.near_haram} />}
+          {fund.asset_type        && <ReportMetricCard label="نوع الأصل"      value={fund.asset_type} />}
+        </ReportSection>
+      )}
+
+      {/* Project specs — areas, units, value, FAR */}
+      {(fund.units_count !== undefined || fund.land_area !== undefined || fund.built_up_area !== undefined ||
+        fund.sellable_area !== undefined || fund.far !== undefined || fund.project_value !== undefined ||
+        fund.duration || fund.sales_model) && (
+        <ReportSection title="مواصفات المشروع">
+          {fund.units_count !== undefined && (
+            <ReportMetricCard label="عدد الوحدات" value={<span className="num">{fund.units_count}</span>} />
+          )}
+          {fund.land_area !== undefined && (
+            <ReportMetricCard label="مساحة الأرض" value={<span className="num">{fund.land_area.toLocaleString('en')} م²</span>} />
+          )}
+          {fund.built_up_area !== undefined && (
+            <ReportMetricCard label="المساحة الإجمالية المبنية" value={<span className="num">{fund.built_up_area.toLocaleString('en')} م²</span>} />
+          )}
+          {fund.sellable_area !== undefined && (
+            <ReportMetricCard label="المساحة القابلة للبيع" value={<span className="num">{fund.sellable_area.toLocaleString('en')} م²</span>} />
+          )}
+          {fund.far !== undefined && (
+            <ReportMetricCard label="معامل البناء (FAR)" value={<span className="num">{fund.far}</span>} />
+          )}
+          {fund.project_value !== undefined && (
+            <ReportMetricCard label="قيمة المشروع" value={<span className="num">{formatCurrency(fund.project_value)}</span>} />
+          )}
+          {fund.duration     && <ReportMetricCard label="مدة المشروع" value={fund.duration} />}
+          {fund.sales_model  && <ReportMetricCard label="نموذج البيع" value={fund.sales_model} />}
+        </ReportSection>
+      )}
+
+      {/* Construction progress */}
+      {(fund.pre_construction_progress !== undefined || fund.overall_progress !== undefined) && (
+        <ReportSection title="نسب الإنجاز">
+          {fund.pre_construction_progress !== undefined && (
+            <div className="mb-4">
+              <div className="flex justify-between mb-1.5 text-[13px]">
+                <span className="text-ink-soft font-medium">ما قبل الإنشاء</span>
+                <span className="num font-bold text-watheeq-navy-deep">{formatPercent(fund.pre_construction_progress)}</span>
+              </div>
+              <ProgressBar value={clampPct(fund.pre_construction_progress)} tone="gold" size="md" />
+            </div>
+          )}
+          {fund.overall_progress !== undefined && (
+            <div>
+              <div className="flex justify-between mb-1.5 text-[13px]">
+                <span className="text-ink-soft font-medium">الإنجاز الكلي</span>
+                <span className="num font-bold text-watheeq-navy-deep">{formatPercent(fund.overall_progress)}</span>
+              </div>
+              <ProgressBar value={clampPct(fund.overall_progress)} tone="gold" size="md" />
+            </div>
+          )}
+        </ReportSection>
+      )}
+
+      {/* Fund metrics + commitment progress (always shown) */}
+      <ReportSection title="مؤشرات الصندوق الرئيسية">
+        <ReportHeroNumbers items={[
+          { label: 'حجم الصندوق',         value: formatCurrencyShort(fund.target_size),      color: 'default' },
+          { label: 'الالتزامات الحالية',  value: formatCurrencyShort(fund.committed_amount), color: 'success' },
+          { label: 'العائد المتوقع',       value: formatPercent(fund.expected_return_pct),    color: 'gold' },
+          { label: 'عدد المستثمرين',      value: String(fund.investors_count ?? 0),           color: 'default' },
+        ]} />
+      </ReportSection>
+
+      <ReportSection title="نسبة الاستقطاب">
+        <div className="space-y-2">
+          <ProgressBar value={progress} tone="gold" size="lg" />
+          <div className="flex justify-between text-[13px]">
+            <span className="num text-ink-muted">{formatCurrencyShort(fund.committed_amount)} محقق</span>
+            <span className="num font-bold text-watheeq-gold-deep">{formatPercent(progress)}</span>
+            <span className="num text-ink-muted">{formatCurrencyShort(fund.target_size)} مستهدف</span>
+          </div>
+        </div>
+      </ReportSection>
+
+      {/* Achievements */}
+      {fund.achievements && (
+        <ReportSection title="الإنجازات">
+          <RichText text={fund.achievements} />
+        </ReportSection>
+      )}
+
+      {/* Monthly summaries */}
+      {(fund.jan_summary || fund.feb_summary || fund.mar_summary) && (
+        <ReportSection title="ملخصات شهرية">
+          {fund.jan_summary && (
+            <div className="mb-4">
+              <p className="text-[12px] font-bold text-watheeq-gold-deep uppercase tracking-wider mb-1.5">يناير</p>
+              <RichText text={fund.jan_summary} />
+            </div>
+          )}
+          {fund.feb_summary && (
+            <div className="mb-4">
+              <p className="text-[12px] font-bold text-watheeq-gold-deep uppercase tracking-wider mb-1.5">فبراير</p>
+              <RichText text={fund.feb_summary} />
+            </div>
+          )}
+          {fund.mar_summary && (
+            <div>
+              <p className="text-[12px] font-bold text-watheeq-gold-deep uppercase tracking-wider mb-1.5">مارس</p>
+              <RichText text={fund.mar_summary} />
+            </div>
+          )}
+        </ReportSection>
+      )}
+
+      {/* Approvals */}
+      {(fund.approvals_completed || fund.approvals_pending) && (
+        <ReportSection title="الموافقات والاعتمادات">
+          {fund.approvals_completed && (
+            <ReportInsight
+              icon="✓"
+              tone="success"
+              label="تمت الموافقات"
+              text={fund.approvals_completed}
+            />
+          )}
+          {fund.approvals_pending && (
+            <div className="mt-3">
+              <ReportInsight
+                icon="⏳"
+                tone="warning"
+                label="قيد الإنجاز"
+                text={fund.approvals_pending}
+              />
+            </div>
+          )}
+        </ReportSection>
+      )}
+
+      {/* What this means for the investor */}
+      {fund.investor_meaning && (
+        <ReportSection title="ماذا يعني هذا للمستثمر؟" gold>
+          <RichText text={fund.investor_meaning} />
+        </ReportSection>
+      )}
+
+      {/* Generic fund details (always shown — useful at-a-glance) */}
+      <ReportSection title="تفاصيل الصندوق">
+        <ReportMetricCard label="فئة الأصول"        value={assetClassLabels[fund.asset_class]} />
+        <ReportMetricCard label="مرحلة الصندوق"     value={fundStageLabels[fund.stage]} />
+        <ReportMetricCard label="حجم الصندوق"       value={<span className="num">{formatCurrency(fund.target_size)}</span>} />
+        <ReportMetricCard label="الالتزامات الحالية" value={<span className="num">{formatCurrency(fund.committed_amount)}</span>} />
+        <ReportMetricCard label="المبلغ المتبقي"     value={<span className="num text-state-warning">{formatCurrency(fund.remaining_amount)}</span>} />
+        <ReportMetricCard label="مدة الصندوق"
+          value={fund.duration_years ? <span className="num">{fund.duration_years} سنوات</span> : '—'} />
+        {fund.fund_close_date && (
+          <ReportMetricCard label="تاريخ الإغلاق المستهدف"
+            value={<span className="num">{formatDate(fund.fund_close_date)}</span>} />
+        )}
+        <ReportMetricCard label="مدير الصندوق" value={empName(fund.fund_manager_id)} />
+      </ReportSection>
+
+      {/* Next steps */}
+      <ReportSection title={isPersonal ? 'الإجراء التالي' : 'الخطوات القادمة'} gold>
+        {fund.next_steps ? (
+          <RichText text={fund.next_steps} />
+        ) : (
+          <ReportInsight
+            icon="➜"
+            tone="success"
+            label={isPersonal ? 'إجراء مقترح' : 'الخطوات القادمة'}
+            text={isPersonal && hasHolding
+              ? `جدولة اجتماع لمراجعة أداء حصة العميل في ${fund.name_ar} ومناقشة فرص زيادة الالتزام في الإغلاقات القادمة.`
+              : isPersonal
+                ? `التواصل مع العميل لتقديم نظرة عامة عن ${fund.name_ar} ومناقشة جدوى الانضمام في الإغلاقات القادمة.`
+                : `استمرار جهود الاستقطاب لاستكمال ${formatCurrencyShort(fund.remaining_amount)} المتبقية من المستهدف، مع التركيز على المستثمرين المؤسسيين والمكاتب العائلية.`}
+          />
+        )}
+      </ReportSection>
+
+      {/* Custom disclaimer (overrides default footer disclaimer) */}
+      {fund.disclaimer && (
+        <ReportSection title="تنويه">
+          <p className="text-[13px] text-ink-muted leading-relaxed">{fund.disclaimer}</p>
+        </ReportSection>
+      )}
+
+      {notes && (
+        <ReportSection title="ملاحظات إضافية" gold>
+          <div style={{ fontSize: 14, color: '#3A3A3A', lineHeight: 1.7, padding: '12px 16px', background: 'rgba(200,164,93,0.06)', borderRadius: 8, borderRight: '3px solid #C8A45D' }}>{notes}</div>
+        </ReportSection>
+      )}
+
+      <ReportFooter disclaimer={!fund.disclaimer} />
+    </ReportShell>
+  );
+}
+
+// Small helper: render multi-line text from a sheet cell (preserves line breaks
+// and renders bullet markers like "- " or "• " as a list-feel paragraph).
+function RichText({ text }: { text: string }) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    return <p className="text-[14px] text-ink leading-relaxed">{text}</p>;
+  }
+  return (
+    <ul className="space-y-1.5">
+      {lines.map((line, i) => {
+        const cleaned = line.replace(/^[-•*]\s*/, '');
+        return (
+          <li key={i} className="text-[14px] text-ink leading-relaxed flex items-start gap-2">
+            <span className="text-watheeq-gold shrink-0 mt-1.5 w-1 h-1 rounded-full bg-watheeq-gold" aria-hidden="true" />
+            <span>{cleaned}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// ─────────────────────────────────────────────
 // J. تقرير SLA والمتابعة
 // ─────────────────────────────────────────────
 export function SLAReport({ notes }: { notes?: string } = {}) {

@@ -7,6 +7,7 @@ export type ReportType =
   | 'pre_visit'
   | 'fund_teaser'
   | 'fund_fundraising'
+  | 'fund_update'
   | 'recommended_investors'
   | 'weekly_visits'
   | 'management_attention'
@@ -77,6 +78,7 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   pre_visit:               'تقرير ما قبل الزيارة',
   fund_teaser:             'تيزر الصندوق',
   fund_fundraising:        'تقرير تعبئة الصندوق',
+  fund_update:             'تقرير تحديث الصندوق',
   recommended_investors:   'تقرير العملاء الموصى بهم',
   weekly_visits:           'تقرير الزيارات الأسبوعي',
   management_attention:    'فرص تحتاج تدخل الإدارة',

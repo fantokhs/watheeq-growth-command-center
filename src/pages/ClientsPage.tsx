@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { EntityLink } from '@/components/ui/EntityLink';
 import { InputFormLauncher } from '@/components/ui/InputFormLauncher';
 import { INPUT_FORMS } from '@/config/inputForms';
-import { useClients, useEmployees, useFunds, usePipeline } from '@/hooks';
+import { useClients, useEmployees, useFunds, useHoldings, usePipeline } from '@/hooks';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { FilterBar, FilterSelect, FilterSearch } from '@/components/ui/FilterBar';
@@ -21,7 +21,7 @@ import {
 } from '@/lib/arabicLabels';
 import { brandColors } from '@/styles/brandTokens';
 import { cn } from '@/lib/utils';
-import type { Client, PipelineItem } from '@/types';
+import type { Client, Fund, Holding, PipelineItem } from '@/types';
 
 type ViewMode = 'table' | 'cards';
 
@@ -54,6 +54,7 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
   const clientsQ  = useClients();
   const empQ      = useEmployees();
   const fundsQ    = useFunds();
+  const holdingsQ = useHoldings();
   const pipelineQ = usePipeline();
   const { state: rptState, openReport, close: closeReport } = useReportPreview();
 
@@ -71,7 +72,21 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
   const clients   = clientsQ.data?.data  ?? [];
   const employees = empQ.data?.data      ?? [];
   const funds     = fundsQ.data?.data    ?? [];
+  const holdings  = holdingsQ.data?.data ?? [];
   const pipeline  = pipelineQ.data?.data ?? [];
+
+  // Resolve "صندوق رتال" from live funds (Sheets first, mock fallback via useFunds).
+  // Matches against name_ar / name_en / project_name with both Arabic and English aliases.
+  const retalFund = useMemo(() => {
+    const AR_KEYWORDS = ['رتال', 'رويا الحرم'];
+    const EN_KEYWORDS = ['retal', 'roya'];
+    return funds.find((f) => {
+      const ar = `${f.name_ar ?? ''} ${f.project_name ?? ''}`;
+      const en = `${f.name_en ?? ''} ${f.project_name ?? ''}`.toLowerCase();
+      return AR_KEYWORDS.some((kw) => ar.includes(kw))
+          || EN_KEYWORDS.some((kw) => en.includes(kw));
+    });
+  }, [funds]);
 
   const empName  = (id?: string) => employees.find((e) => e.employee_id === id)?.name_ar ?? '—';
   const fundName = (id?: string) => funds.find((f) => f.fund_id === id)?.name_ar ?? '—';
@@ -289,6 +304,12 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
           empName={empName}
           fundName={fundName}
           opportunities={clientOpps(selected.client_id)}
+          retalFund={retalFund}
+          retalHolding={
+            retalFund
+              ? holdings.find((h) => h.client_id === selected.client_id && h.fund_id === retalFund.fund_id) ?? null
+              : null
+          }
           onClose={() => setSelected(null)}
           onOpenReport={openReport}
         />
@@ -423,11 +444,13 @@ function ClientCardsGrid({ clients, empName, clientOpps, onSelect }: {
 // ─────────────────────────────────────────────
 // Client Profile Drawer — executive summary
 // ─────────────────────────────────────────────
-function ClientDrawer({ client, empName, fundName, opportunities, onClose, onOpenReport }: {
+function ClientDrawer({ client, empName, fundName, opportunities, retalFund, retalHolding, onClose, onOpenReport }: {
   client: Client;
   empName: (id?: string) => string;
   fundName: (id?: string) => string;
   opportunities: PipelineItem[];
+  retalFund?: Fund;
+  retalHolding: Holding | null;
   onClose: () => void;
   onOpenReport: (s: import('@/hooks/useReportPreview').ReportPreviewState) => void;
 }) {
@@ -464,6 +487,39 @@ function ClientDrawer({ client, empName, fundName, opportunities, onClose, onOpe
       <div className="flex gap-2 flex-wrap">
         <ReportDrawerBtn label="تقرير العميل" icon="📄" onClick={() => onOpenReport({ reportType: 'client_summary', clientId: client.client_id })} />
         <ReportDrawerBtn label="تقرير قبل الزيارة" icon="📋" onClick={() => onOpenReport({ reportType: 'pre_visit', clientId: client.client_id })} />
+        {(() => {
+          const reportReady = (retalFund?.report_ready ?? '').trim().toUpperCase() === 'YES';
+          const enabled = !!retalFund && reportReady;
+          const label = !retalFund
+            ? 'تحديث صندوق رتال'
+            : reportReady
+              ? `تحديث ${retalFund.name_ar}`
+              : 'لم يجهز التقرير بعد';
+          const tooltip = !retalFund
+            ? 'بيانات صندوق رتال غير متاحة في المصدر حالياً'
+            : reportReady
+              ? undefined
+              : 'لم يجهز التقرير بعد';
+          return (
+            <ReportDrawerBtn
+              label={label}
+              icon="🏗"
+              disabled={!enabled}
+              disabledTitle={tooltip}
+              onClick={() => {
+                if (!enabled || !retalFund) return;
+                onOpenReport({
+                  reportType: 'fund_update',
+                  fundId: retalFund.fund_id,
+                  clientId: client.client_id,
+                  liveFund: retalFund,
+                  liveClient: client,
+                  liveHolding: retalHolding,
+                });
+              }}
+            />
+          );
+        })()}
       </div>
 
       {/* Data entry launchers */}
@@ -581,10 +637,18 @@ function ClientDrawer({ client, empName, fundName, opportunities, onClose, onOpe
   );
 }
 
-function ReportDrawerBtn({ label, icon, onClick }: { label: string; icon: string; onClick: () => void }) {
+function ReportDrawerBtn({ label, icon, onClick, disabled, disabledTitle }: {
+  label: string; icon: string; onClick: () => void;
+  disabled?: boolean; disabledTitle?: string;
+}) {
   return (
-    <button type="button" onClick={onClick}
-      className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-bold py-2 px-3 rounded-lg border border-watheeq-navy/20 bg-watheeq-bg-cream/60 text-watheeq-navy hover:bg-watheeq-navy hover:text-white transition-all">
+    <button type="button" onClick={onClick} disabled={disabled} title={disabled ? disabledTitle : undefined}
+      className={cn(
+        'flex-1 flex items-center justify-center gap-1.5 text-[12px] font-bold py-2 px-3 rounded-lg border transition-all',
+        disabled
+          ? 'border-line/40 bg-watheeq-bg-cream/30 text-ink-faint cursor-not-allowed'
+          : 'border-watheeq-navy/20 bg-watheeq-bg-cream/60 text-watheeq-navy hover:bg-watheeq-navy hover:text-white'
+      )}>
       <span>{icon}</span> {label}
     </button>
   );

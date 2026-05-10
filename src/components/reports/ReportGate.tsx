@@ -1,7 +1,7 @@
 import { ReportPreviewModal } from './ReportPreviewModal';
 import {
   ClientSummaryReport, PreVisitReport,
-  FundTeaserReport, FundFundraisingReport,
+  FundTeaserReport, FundFundraisingReport, FundUpdateReport,
   RecommendedInvestorsReport, WeeklyVisitsReport,
   ManagementAttentionReport, CEOWeeklyReport,
   RMPerformanceReport, SLAReport,
@@ -21,6 +21,7 @@ const AUDIENCE_MAP: Record<string, ReportAudience> = {
   pre_visit:             'internal',
   fund_teaser:           'client',
   fund_fundraising:      'management',
+  fund_update:           'client',
   recommended_investors: 'bd_team',
   weekly_visits:         'management',
   management_attention:  'ceo',
@@ -32,17 +33,17 @@ const AUDIENCE_MAP: Record<string, ReportAudience> = {
 export function ReportGate({ state, onClose }: ReportGateProps) {
   if (!state) return null;
 
-  const { reportType, clientId, fundId, ownerId, notes } = state;
+  const { reportType, clientId, fundId, ownerId, notes, liveFund, liveClient, liveHolding } = state;
   const label    = REPORT_TYPE_LABELS[reportType] ?? reportType;
   const audience = AUDIENCE_MAP[reportType] ?? 'internal';
 
-  // Resolve display names from static imports — no require()
-  const clientName = clientId
-    ? mockClients.find((c) => c.client_id === clientId)?.name_ar
-    : undefined;
-  const fundName = fundId
-    ? mockFunds.find((f) => f.fund_id === fundId)?.name_ar
-    : undefined;
+  // Resolve display names — prefer live entities passed from page, fallback to mock lookup
+  const clientName =
+    liveClient?.name_ar ??
+    (clientId ? mockClients.find((c) => c.client_id === clientId)?.name_ar : undefined);
+  const fundName =
+    liveFund?.name_ar ??
+    (fundId ? mockFunds.find((f) => f.fund_id === fundId)?.name_ar : undefined);
 
   function renderTemplate() {
     switch (reportType) {
@@ -50,6 +51,20 @@ export function ReportGate({ state, onClose }: ReportGateProps) {
       case 'pre_visit':             return <PreVisitReport clientId={clientId} notes={notes} />;
       case 'fund_teaser':           return <FundTeaserReport fundId={fundId} notes={notes} />;
       case 'fund_fundraising':      return <FundFundraisingReport fundId={fundId} notes={notes} />;
+      case 'fund_update': {
+        if (!liveFund) {
+          return (
+            <div className="flex items-center justify-center" style={{ minHeight: 300, background: '#fff' }}>
+              <div className="text-center px-6">
+                <p className="text-[32px] mb-3">⚠️</p>
+                <p className="text-[16px] font-bold text-watheeq-navy-deep mb-1">تعذر تحميل التقرير</p>
+                <p className="text-[13px] text-ink-muted">بيانات الصندوق غير متاحة حالياً.</p>
+              </div>
+            </div>
+          );
+        }
+        return <FundUpdateReport fund={liveFund} client={liveClient} holding={liveHolding} notes={notes} />;
+      }
       case 'recommended_investors': return <RecommendedInvestorsReport fundId={fundId} notes={notes} />;
       case 'weekly_visits':         return <WeeklyVisitsReport notes={notes} />;
       case 'management_attention':  return <ManagementAttentionReport notes={notes} />;
