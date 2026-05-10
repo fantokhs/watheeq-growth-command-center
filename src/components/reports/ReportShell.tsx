@@ -57,7 +57,7 @@ export function ReportActionsBar({
 
           {/* Secondary: Download + Utilities + Close */}
           <div className="flex items-center gap-1.5">
-            <SecondaryBtn icon="⬇" label="PDF"    onClick={showComingSoon} />
+            <SecondaryBtn icon="⬇" label="PDF"    onClick={() => window.print()} />
             <SecondaryBtn icon="⬇" label="Excel"  onClick={showComingSoon} />
             <SecondaryBtn icon="🗓" label="جدولة"  onClick={showComingSoon} />
             <SecondaryBtn icon="🔗" label="رابط"   onClick={showComingSoon} />
@@ -233,12 +233,24 @@ export function ReportHeroNumbers({ items }: {
         <div key={i} className="bg-watheeq-bg-cream/60 rounded-xl p-4 border border-line/50">
           <p className="text-[12px] text-ink-soft mb-2 leading-tight font-medium">{item.label}</p>
           <p className={cn('num font-bold text-[26px] leading-none', colorMap[item.color ?? 'default'])}>
-            {item.value}
+            {renderHeroValue(item.value)}
           </p>
           {item.sub && <p className="text-[12px] text-ink-muted mt-1.5">{item.sub}</p>}
         </div>
       ))}
     </div>
+  );
+}
+
+// Split numeric/Latin from Arabic so Arabic units render in the dashboard's
+// base Arabic font (.num-suffix) instead of inheriting the .num Latin font.
+function renderHeroValue(value: string) {
+  const parts = value.split(/([؀-ۿ][؀-ۿ\s]*)/g).filter(Boolean);
+  if (parts.length <= 1) return value;
+  return parts.map((p, i) =>
+    /[؀-ۿ]/.test(p)
+      ? <span key={i} className="num-suffix text-[0.55em]">{p}</span>
+      : <span key={i}>{p}</span>
   );
 }
 
