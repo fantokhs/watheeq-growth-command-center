@@ -108,18 +108,26 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
   const owners = useMemo(() => [...new Set(clients.map((c) => c.relationship_owner_id).filter(Boolean))] as string[], [clients]);
   const activeFilters = [fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification, fFund].filter(Boolean).length + (search ? 1 : 0);
 
-  const filtered = useMemo(() => clients.filter((c) => {
-    if (search         && !c.name_ar.includes(search))               return false;
-    if (fClass         && c.classification !== fClass)               return false;
-    if (fCity          && c.city?.trim() !== fCity.trim())           return false;
-    if (fOwner         && c.relationship_owner_id !== fOwner)        return false;
-    if (fStatus        && c.status !== fStatus)                      return false;
-    if (fRisk          && c.risk_profile !== fRisk)                  return false;
-    if (fAsset         && c.preferred_asset_class !== fAsset)        return false;
-    if (fQualification && c.qualificationStatus !== fQualification)  return false;
-    if (fFund          && !holdings.some((h) => h.client_id === c.client_id && h.fund_id === fFund)) return false;
-    return true;
-  }), [clients, holdings, search, fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification, fFund]);
+  const filtered = useMemo(() => {
+    const selectedFund = fFund ? funds.find((f) => f.fund_id === fFund) : undefined;
+    const linkedSet    = new Set(selectedFund?.linked_client_ids ?? []);
+    return clients.filter((c) => {
+      if (search         && !c.name_ar.includes(search))               return false;
+      if (fClass         && c.classification !== fClass)               return false;
+      if (fCity          && c.city?.trim() !== fCity.trim())           return false;
+      if (fOwner         && c.relationship_owner_id !== fOwner)        return false;
+      if (fStatus        && c.status !== fStatus)                      return false;
+      if (fRisk          && c.risk_profile !== fRisk)                  return false;
+      if (fAsset         && c.preferred_asset_class !== fAsset)        return false;
+      if (fQualification && c.qualificationStatus !== fQualification)  return false;
+      if (fFund) {
+        const viaHolding = holdings.some((h) => h.client_id === c.client_id && h.fund_id === fFund);
+        const viaLinked  = linkedSet.has(c.client_id);
+        if (!viaHolding && !viaLinked) return false;
+      }
+      return true;
+    });
+  }, [clients, funds, holdings, search, fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification, fFund]);
 
   const clearFilters = () => { setSearch(''); setFClass(''); setFCity(''); setFOwner(''); setFStatus(''); setFRisk(''); setFAsset(''); setFQualification(''); setFFund(''); };
 
