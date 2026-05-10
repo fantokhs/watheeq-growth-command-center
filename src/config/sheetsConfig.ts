@@ -14,7 +14,7 @@ const TAB = 'gviz/tq?tqx=out:csv&sheet=data';
 
 export const sheetsConfig = {
   clients:             `${GS}/1rQkPU_vF0W0UPe56Eknp19JUSpFUNkpK95zBNgWXCQw/${TAB}`,
-  funds:               `${GS}/1yDsXmf7TLtqhSH6pqe_oAm6vqmlhUFcwn28WCTgXxkc/${TAB}`,
+  funds:               `${GS}/1BC56ayhgKzOSmjJD-NeN1Z4HoEDRDJNADxVz_Mvpjpc/${TAB}`,
   pipeline:            `${GS}/1c8Xuwe1kOHzAfC-h4Je5Fp0knhWQIb5pxyM-Fz9AiWE/${TAB}`,
   visits:              `${GS}/110_bJvLjJ1Y1PeHIgBd3kA4UM2JLofU3poUXXwCdZ30/${TAB}`,
   clientRequests:      `${GS}/1M1olartcuk5nKrgoVc6ZiEnCqodn_BoCfYJn3H-78L4/${TAB}`,
