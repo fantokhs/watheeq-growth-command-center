@@ -67,6 +67,7 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
   const [fRisk, setFRisk]             = useState('');
   const [fAsset, setFAsset]           = useState('');
   const [fQualification, setFQualification] = useState('');
+  const [fFund, setFFund]             = useState('');
   const [selected, setSelected]       = useState<Client | null>(null);
 
   const clients   = clientsQ.data?.data  ?? [];
@@ -105,7 +106,7 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
 
   const cities = useMemo(() => [...new Set(clients.map((c) => c.city).filter(Boolean))] as string[], [clients]);
   const owners = useMemo(() => [...new Set(clients.map((c) => c.relationship_owner_id).filter(Boolean))] as string[], [clients]);
-  const activeFilters = [fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification].filter(Boolean).length + (search ? 1 : 0);
+  const activeFilters = [fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification, fFund].filter(Boolean).length + (search ? 1 : 0);
 
   const filtered = useMemo(() => clients.filter((c) => {
     if (search         && !c.name_ar.includes(search))               return false;
@@ -116,10 +117,11 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
     if (fRisk          && c.risk_profile !== fRisk)                  return false;
     if (fAsset         && c.preferred_asset_class !== fAsset)        return false;
     if (fQualification && c.qualificationStatus !== fQualification)  return false;
+    if (fFund          && !holdings.some((h) => h.client_id === c.client_id && h.fund_id === fFund)) return false;
     return true;
-  }), [clients, search, fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification]);
+  }), [clients, holdings, search, fClass, fCity, fOwner, fStatus, fRisk, fAsset, fQualification, fFund]);
 
-  const clearFilters = () => { setSearch(''); setFClass(''); setFCity(''); setFOwner(''); setFStatus(''); setFRisk(''); setFAsset(''); setFQualification(''); };
+  const clearFilters = () => { setSearch(''); setFClass(''); setFCity(''); setFOwner(''); setFStatus(''); setFRisk(''); setFAsset(''); setFQualification(''); setFFund(''); };
 
   if (clientsQ.isLoading) return <LoadingState message="جاري تحميل بيانات العملاء…" minHeight="60vh" />;
   if (clientsQ.isError)   return <ErrorState title="تعذر تحميل العملاء" onRetry={() => clientsQ.refetch()} />;
@@ -269,6 +271,8 @@ export function ClientsPage({ autoOpenClientId, onAutoOpenConsumed }: {
             Object.fromEntries(employees.map(e => [e.employee_id, e.name_ar])))} />
         <FilterSelect label="التأهيل" value={fQualification} onChange={setFQualification}
           options={buildFilterOptions(clients, c => c.qualificationStatus ?? null)} />
+        <FilterSelect label="الصندوق" value={fFund} onChange={setFFund}
+          options={funds.map((f) => ({ value: f.fund_id, label: f.name_ar }))} />
       </FilterBar>
 
       {/* View toggle */}
