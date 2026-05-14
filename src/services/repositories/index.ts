@@ -157,6 +157,7 @@ export async function getFunds(): Promise<FetchResult<Fund>> {
 
       // ── 02_Funds report payload (all optional; column names match the live sheet)
       report_ready:               parseString(raw.report_ready),
+      annual_report_pdf_url:      parseString(raw.annual_report_pdf_url),
       report_status:              parseString(raw.report_status),
       report_title:               parseString(raw.report_title),
       report_period:              parseString(raw.report_period),

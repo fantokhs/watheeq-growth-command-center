@@ -106,6 +106,7 @@ export interface Fund {
   // All optional. Drive the FundUpdateReport when present, fall back
   // to the generic fields above otherwise.
   report_ready?: string;
+  annual_report_pdf_url?: string;
   report_status?: string;
   report_title?: string;
   report_period?: string;

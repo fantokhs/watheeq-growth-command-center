@@ -309,6 +309,16 @@ function FundDrawer({ fund, clients, pipeline, empName, onClose, onOpenReport }:
           className="text-[12px] font-bold px-3 py-2 rounded-lg border border-watheeq-navy/20 bg-watheeq-bg-cream/60 text-watheeq-navy hover:bg-watheeq-navy hover:text-white transition-all flex items-center gap-1.5">
           ⭐ العملاء الموصى بهم
         </button>
+        {fund.annual_report_pdf_url && (
+          <a
+            href={fund.annual_report_pdf_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[12px] font-bold px-3 py-2 rounded-lg border border-watheeq-navy/20 bg-watheeq-bg-cream/60 text-watheeq-navy hover:bg-watheeq-navy hover:text-white transition-all flex items-center gap-1.5"
+          >
+            📑 تحميل التقرير السنوي 2025
+          </a>
+        )}
       </div>
 
       {/* Data entry launchers */}
